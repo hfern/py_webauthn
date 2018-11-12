@@ -24,6 +24,7 @@ from OpenSSL import crypto
 
 import const
 
+long_ = six.integer_types[-1]  # py2: long. py3: int
 
 # Only supporting 'None', 'Basic', and 'Self Attestation' attestation types for now.
 AT_BASIC = 'Basic'
@@ -121,7 +122,7 @@ class WebAuthnMakeCredentialOptions(object):
                 'webauthn.loc': True
             }
         }
-        
+
         if self.icon_url:
             registration_dict['user']['icon'] = self.icon_url
 
@@ -306,7 +307,7 @@ class WebAuthnRegistrationResponse(object):
             # claimed credentialId and credentialPublicKey from
             # authenticatorData.attestedCredentialData.
             attestation_data = auth_data[37:]
-            aaguid = attestation_data[:16]
+            aaguid = attestation_data[:16]  # noqa: F841
             credential_id_len = struct.unpack('!H', attestation_data[16:18])[0]
             cred_id = attestation_data[18:18 + credential_id_len]
             credential_pub_key = attestation_data[18 + credential_id_len:]
@@ -366,7 +367,7 @@ class WebAuthnRegistrationResponse(object):
             x = cpk[x_key].encode('hex')
             if len(x) != 64:
                 raise RegistrationRejectedException('Bad public key.')
-            x_long = long(x, 16)
+            x_long = long_(x, 16)
 
             # Extract the value corresponding to the "-3" key (representing y coordinate)
             # from credentialPublicKey, confirm its size to be of 32 bytes and concatenate
@@ -375,7 +376,7 @@ class WebAuthnRegistrationResponse(object):
             y = cpk[y_key].encode('hex')
             if len(y) != 64:
                 raise RegistrationRejectedException('Bad public key.')
-            y_long = long(y, 16)
+            y_long = long_(y, 16)
 
             user_ec = EllipticCurvePublicNumbers(
                 x_long, y_long,
@@ -446,12 +447,12 @@ class WebAuthnRegistrationResponse(object):
             x = cpk[x_key].encode('hex')
             if len(x) != 64:
                 raise RegistrationRejectedException('Bad public key.')
-            x_long = long(x, 16)
+            x_long = long_(x, 16)
 
             y = cpk[y_key].encode('hex')
             if len(y) != 64:
                 raise RegistrationRejectedException('Bad public key.')
-            y_long = long(y, 16)
+            y_long = long_(y, 16)
 
             ES256 = -7
             if cpk[alg_key] != ES256:
@@ -488,10 +489,10 @@ class WebAuthnRegistrationResponse(object):
             decoded_cd = _webauthn_b64_decode(json_text)
             c = json.loads(decoded_cd)
 
-            credential_id = self.registration_response.get('id')
-            raw_id = self.registration_response.get('rawId')
+            credential_id = self.registration_response.get('id')  # noqa: F841
+            raw_id = self.registration_response.get('rawId')  # noqa: F841
             attestation_object = self.registration_response.get('attObj')
-            credential_type = self.registration_response.get('type')
+            credential_type = self.registration_response.get('type')  # noqa: F841
 
             # Step 3.
             #
@@ -967,8 +968,8 @@ def _decode_public_key(key_bytes):
     # _PyLong_FromByteArray), converting to hex-encoding and then parsing
     # seems to be the simplest way to make these into python big-integers.
     curve = SECP256R1()
-    x = long(key_bytes[1:33].encode('hex'), 16)
-    y = long(key_bytes[33:].encode('hex'), 16)
+    x = long_(key_bytes[1:33].encode('hex'), 16)
+    y = long_(key_bytes[33:].encode('hex'), 16)
 
     return EllipticCurvePublicNumbers(x, y, curve)
 
@@ -1101,7 +1102,7 @@ def _verify_token_binding_id(client_data):
     '''
     # TODO: Add support for verifying token binding ID.
     token_binding_status = client_data['tokenBinding']['status']
-    token_binding_id = client_data['tokenBinding'].get('id', '')
+    token_binding_id = client_data['tokenBinding'].get('id', '')  # noqa: F841
     if token_binding_status in ('supported', 'not-supported'):
         return True
     return False
